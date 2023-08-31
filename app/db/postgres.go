@@ -1,8 +1,11 @@
 package db
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 	"os"
+	"segmenty/app/sdk"
 
 	"go.uber.org/zap"
 
@@ -35,4 +38,27 @@ func NewDB() *Database {
 	DB.db = db
 
 	return DB
+}
+
+func (r *Database) Init(ctx context.Context) bool {
+	ctx, cancel := context.WithTimeout(ctx, extendedTimeout)
+	defer cancel()
+
+	var err error
+
+	_, err = r.db.ExecContext(ctx, queryCreateUsersTable)
+	if err != nil && !sdk.IsDublicateTableErr(err) {
+		r.logger.Error("", zap.Error(fmt.Errorf("while creating users table: %w", err)))
+
+		return false
+	}
+
+	_, err = r.db.ExecContext(ctx, queryCreateSegmentsTable)
+	if err != nil && !sdk.IsDublicateTableErr(err) {
+		r.logger.Error("", zap.Error(fmt.Errorf("while creating segments table: %w", err)))
+
+		return false
+	}
+	return true
+
 }

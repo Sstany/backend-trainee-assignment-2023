@@ -1,11 +1,13 @@
 package users
 
 import (
+	"errors"
 	"net/http"
 
 	"segmenty/app/db/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/goccy/go-json"
 	"go.uber.org/zap"
 )
 
@@ -38,6 +40,36 @@ func (r *Users) fetch(ctx *gin.Context) {
 
 }
 func (r *Users) create(ctx *gin.Context) {
+	var user models.User
+
+	if err := json.NewDecoder(ctx.Request.Body).Decode(&user); err != nil {
+		r.logger.Error("", zap.Error(err))
+
+		var unmarshalError *json.UnmarshalTypeError
+		if errors.As(err, &unmarshalError) {
+			ctx.AbortWithError(http.StatusBadRequest, err)
+
+			return
+		}
+
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+
+		return
+	}
+
+	userID, err := r.db.InsertUser(ctx, &user)
+	if err != nil {
+		r.logger.Error("", zap.Error(err))
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+
+		return
+	}
+
+	if userID != userID {
+		user.ID = userID
+	}
+
+	ctx.JSON(http.StatusCreated, user)
 
 }
 func (r *Users) delete(ctx *gin.Context) {

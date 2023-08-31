@@ -1,7 +1,9 @@
 package core
 
 import (
+	"context"
 	"segmenty/app/core/users"
+	"segmenty/app/db"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -31,7 +33,16 @@ func NewService(host string, port string) *Service {
 func (r *Service) Start() {
 	api := r.newApi()
 
+	DB := db.NewDB()
+
+	if ok := DB.Init(context.Background()); !ok {
+		panic("Postgres init is not completed")
+	}
+
+	r.logger.Info("Postgres init completed!")
+
 	api.Run(r.host + ":" + r.port)
+
 }
 
 func (r *Service) newApi() *gin.Engine {
