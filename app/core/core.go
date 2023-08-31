@@ -36,30 +36,35 @@ func (r *Service) Start() {
 
 	DB := db.NewDB()
 
-	if ok := DB.Init(context.Background()); !ok {
+	initedTables, ok := DB.Init(context.Background())
+	if !ok {
 		panic("Postgres init is not completed")
 	}
 
-	r.logger.Info("Postgres init completed!")
-
+	r.logger.Info("Postgres successfully inited!: ", zap.Strings("inited tables", initedTables))
 	api.Run(r.host + ":" + r.port)
-
 }
 
 func (r *Service) newApi() *gin.Engine {
-
 	router := gin.New()
 
 	router.Use(CreateLoggerMiddleware(r.logger))
 
 	api := router.Group("/api/v1")
 
+	//
+	// USERS
+	//
+
 	users.AttachToGroup(api.Group("/users"))
+
+	//
+	// SEGMENTS
+	//
 
 	segments.AttachToGroup(api.Group("/segments"))
 
 	return router
-
 }
 
 func CreateLoggerMiddleware(logger *zap.Logger) func(ctx *gin.Context) {

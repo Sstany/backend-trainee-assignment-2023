@@ -40,32 +40,49 @@ func NewDB() *Database {
 	return DB
 }
 
-func (r *Database) Init(ctx context.Context) bool {
+func (r *Database) Init(ctx context.Context) ([]string, bool) {
 	ctx, cancel := context.WithTimeout(ctx, extendedTimeout)
 	defer cancel()
 
 	var err error
 
+	var initedTables []string
+
 	_, err = r.db.ExecContext(ctx, queryCreateUsersTable)
 	if err != nil && !sdk.IsDublicateTableErr(err) {
 		r.logger.Error("", zap.Error(fmt.Errorf("while creating users table: %w", err)))
 
-		return false
+		return initedTables, false
 	}
+
+	initedTables = append(initedTables, "users")
 
 	_, err = r.db.ExecContext(ctx, queryCreateSegmentsTable)
 	if err != nil && !sdk.IsDublicateTableErr(err) {
 		r.logger.Error("", zap.Error(fmt.Errorf("while creating segments table: %w", err)))
 
-		return false
+		return initedTables, false
 	}
+
+	initedTables = append(initedTables, "segments")
 
 	_, err = r.db.ExecContext(ctx, queryCreateSegmentsUsersTable)
 	if err != nil && !sdk.IsDublicateTableErr(err) {
 		r.logger.Error("", zap.Error(fmt.Errorf("while creating segments_users table: %w", err)))
 
-		return false
+		return initedTables, false
 	}
 
-	return true
+	initedTables = append(initedTables, "segments_users")
+
+	_, err = r.db.ExecContext(ctx, queryCreateHistoryTable)
+	if err != nil && !sdk.IsDublicateTableErr(err) {
+		r.logger.Error("", zap.Error(fmt.Errorf("while creating history table: %w", err)))
+
+		return initedTables, false
+	}
+
+	initedTables = append(initedTables, "history")
+
+	return initedTables, true
 }

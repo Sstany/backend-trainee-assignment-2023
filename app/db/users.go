@@ -63,7 +63,7 @@ func (r *Database) ListAllUserSegments(ctx context.Context, user *models.User) (
 
 	var allSegments []models.Segment
 
-	rows, err := r.db.QueryContext(ctx, querySelectAllUserSegments, user.ID)
+	rows, err := r.db.QueryContext(ctx, queryFetchAllUserSegments, user.ID)
 	if err != nil {
 		return nil, fmt.Errorf("while fetching all segments: %w", err)
 	}
@@ -103,7 +103,7 @@ func (r *Database) addUserSegments(
 			continue
 		}
 
-		if err := r.insertSegmentUser(ctx, segment.ID, userId); err != nil {
+		if err := r.insertSegmentUser(ctx, segment, userId); err != nil {
 			r.logger.Error("", zap.Error(err))
 			updateStats.Failed = append(updateStats.Failed, segmentName)
 
@@ -114,17 +114,6 @@ func (r *Database) addUserSegments(
 	}
 
 	return &updateStats
-}
-
-func (r *Database) insertSegmentUser(ctx context.Context, segmentId, userId int) error {
-	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
-	defer cancel()
-
-	if _, err := r.db.ExecContext(ctx, queryInsertSegmentUser, userId, segmentId); err != nil {
-		return fmt.Errorf("while inserting segment into user: %w", err)
-	}
-
-	return nil
 }
 
 func (r *Database) deleteUserSegments(
@@ -146,7 +135,7 @@ func (r *Database) deleteUserSegments(
 			continue
 		}
 
-		if err := r.deleteSegmentUser(ctx, segment.ID, userId); err != nil {
+		if err := r.deleteSegmentUser(ctx, segment, userId); err != nil {
 			r.logger.Error("", zap.Error(err))
 			if err == errNothingChanged {
 				updateStats.Skipped = append(updateStats.Skipped, segmentName)
@@ -165,11 +154,26 @@ func (r *Database) deleteUserSegments(
 	return &updateStats
 }
 
-func (r *Database) deleteSegmentUser(ctx context.Context, segmentId, userId int) error {
+func (r *Database) insertSegmentUser(ctx context.Context, segment *models.Segment, userId int) error {
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 
-	res, err := r.db.ExecContext(ctx, queryDeleteSegmentUser, userId, segmentId)
+	if _, err := r.db.ExecContext(ctx, queryInsertSegmentUser, userId, segment.ID); err != nil {
+		return fmt.Errorf("while inserting segment into user: %w", err)
+	}
+
+	if err := r.insertHistory(ctx, userId, models.TypeAdd, segment.Name); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Database) deleteSegmentUser(ctx context.Context, segment *models.Segment, userId int) error {
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	res, err := r.db.ExecContext(ctx, queryDeleteSegmentUser, userId, segment.ID)
 	if err != nil {
 		return fmt.Errorf("while deleting segment from user: %w", err)
 	}
@@ -181,6 +185,10 @@ func (r *Database) deleteSegmentUser(ctx context.Context, segmentId, userId int)
 
 	if rowsAffected == 0 {
 		return errNothingChanged
+	}
+
+	if err := r.insertHistory(ctx, userId, models.TypeDelete, segment.Name); err != nil {
+		return err
 	}
 
 	return nil

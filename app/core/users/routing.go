@@ -21,6 +21,8 @@ func AttachToGroup(group *gin.RouterGroup) {
 
 	group.GET("/:id/segments", usersEnv.listSegments)
 	group.POST("/:id/segments", usersEnv.updateSegments)
+
+	group.GET("/:id/history", usersEnv.listUserSegmentsHistory)
 }
 
 func newUsersEnv() *Users {

@@ -194,3 +194,25 @@ func (r *Users) list(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, allUsers)
 }
+
+func (r *Users) listUserSegmentsHistory(ctx *gin.Context) {
+	var user *models.User
+
+	err := ctx.ShouldBindUri(&user)
+	if err != nil {
+		r.logger.Error("", zap.Error(err))
+		ctx.AbortWithError(http.StatusBadRequest, err)
+
+		return
+	}
+
+	historySegments, err := r.db.ListAllUserHistory(ctx, user.ID)
+	if err != nil {
+		r.logger.Error("", zap.Error(err))
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, historySegments)
+}
