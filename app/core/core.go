@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"segmenty/app/core/segments"
 	"segmenty/app/core/users"
 	"segmenty/app/db"
 
@@ -55,6 +56,8 @@ func (r *Service) newApi() *gin.Engine {
 
 	users.AttachToGroup(api.Group("/users"))
 
+	segments.AttachToGroup(api.Group("/segments"))
+
 	return router
 
 }
@@ -63,5 +66,7 @@ func CreateLoggerMiddleware(logger *zap.Logger) func(ctx *gin.Context) {
 
 	return func(ctx *gin.Context) {
 		logger.Info(ctx.Request.Host, zap.String("Method", ctx.Request.Method), zap.String("URI", ctx.Request.RequestURI))
+
+		ctx.Next()
 	}
 }

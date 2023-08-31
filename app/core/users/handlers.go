@@ -21,6 +21,7 @@ func (r *Users) fetch(ctx *gin.Context) {
 
 		return
 	}
+
 	newUser, isNoRows, err := r.db.FetchUser(ctx, user.ID)
 	if err != nil {
 		r.logger.Error("", zap.Error(err))
@@ -39,6 +40,7 @@ func (r *Users) fetch(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, newUser)
 
 }
+
 func (r *Users) create(ctx *gin.Context) {
 	var user models.User
 
@@ -72,12 +74,15 @@ func (r *Users) create(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, user)
 
 }
+
 func (r *Users) delete(ctx *gin.Context) {
 
 }
+
 func (r *Users) updateSegments(ctx *gin.Context) {
 
 }
+
 func (r *Users) listSegments(ctx *gin.Context) {
 
 }

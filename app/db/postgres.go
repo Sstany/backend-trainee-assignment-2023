@@ -59,6 +59,7 @@ func (r *Database) Init(ctx context.Context) bool {
 
 		return false
 	}
+
 	return true
 
 }

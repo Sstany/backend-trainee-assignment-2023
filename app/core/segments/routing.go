@@ -12,7 +12,7 @@ type Segments struct {
 	logger *zap.Logger
 }
 
-func AttacheToGroup(group *gin.RouterGroup) {
+func AttachToGroup(group *gin.RouterGroup) {
 	segmentsEnv := newSegmentsEnv()
 
 	group.GET("/", segmentsEnv.list)
