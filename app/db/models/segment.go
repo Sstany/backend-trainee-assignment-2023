@@ -1,6 +1,6 @@
 package models
 
-type Segments struct {
+type Segment struct {
 	ID   int
 	Name string
 }
