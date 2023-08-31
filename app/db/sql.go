@@ -24,6 +24,11 @@ const (
 		segmentId   int REFERENCES segments (segmentId) ON UPDATE CASCADE ON DELETE CASCADE,
 		userId int REFERENCES users (userId) ON UPDATE CASCADE,
 		CONSTRAINT segment_user_pkey PRIMARY KEY (segmentId, userId))`
+	querySelectAllUserSegments = `SELECT s.segmentId, name
+		FROM users u
+		JOIN segments_users su on su.userId = u.userId
+		JOIN segments s on su.segmentId = s.segmentId
+		WHERE u.userId = $1`
 )
 
 const (

@@ -57,6 +57,33 @@ func (r *Database) UpdateUserSegments(
 	return &response
 }
 
+func (r *Database) ListAllUserSegments(ctx context.Context, user *models.User) (*[]models.Segment, error) {
+	ctx, cancel := context.WithTimeout(ctx, extendedTimeout)
+	defer cancel()
+
+	var allSegments []models.Segment
+
+	rows, err := r.db.QueryContext(ctx, querySelectAllUserSegments, user.ID)
+	if err != nil {
+		return nil, fmt.Errorf("while fetching all segments: %w", err)
+	}
+
+	defer rows.Close()
+
+	var tempSegment models.Segment
+
+	for rows.Next() {
+		err := rows.Scan(&tempSegment.ID, &tempSegment.Name)
+		if err != nil {
+			return &allSegments, fmt.Errorf("while scanning segment: %w", err)
+		}
+
+		allSegments = append(allSegments, tempSegment)
+	}
+
+	return &allSegments, rows.Err()
+}
+
 func (r *Database) addUserSegments(
 	ctx context.Context,
 	userId int,

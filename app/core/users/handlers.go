@@ -129,5 +129,38 @@ func (r *Users) updateSegments(ctx *gin.Context) {
 }
 
 func (r *Users) listSegments(ctx *gin.Context) {
+	var user *models.User
 
+	err := ctx.ShouldBindUri(&user)
+	if err != nil {
+		r.logger.Error("", zap.Error(err))
+		ctx.AbortWithError(http.StatusBadRequest, err)
+
+		return
+	}
+
+	newUser, isNoRows, err := r.db.FetchUser(ctx, user.ID)
+	if err != nil {
+		r.logger.Error("", zap.Error(err))
+
+		if isNoRows {
+			ctx.String(http.StatusNotFound, "User with id '%d' is not found", user.ID)
+
+			return
+		}
+
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+
+		return
+	}
+
+	allSegments, err := r.db.ListAllUserSegments(ctx, newUser)
+	if err != nil {
+		r.logger.Error("", zap.Error(err))
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, allSegments)
 }
