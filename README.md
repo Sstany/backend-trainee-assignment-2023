@@ -28,7 +28,7 @@ docker compose down --volumes
 
 # REST API
 
-Все эндпойнты находятся в /api/v1/
+Описание REST API в openapi.yaml
 
 ## Get specific user
 
@@ -78,31 +78,8 @@ Content-Length: 30
 
 User with id '9999' is not found
 
-Questions
+### Questions
 
 Могут ли быть одинаковые slug у  сегментов?
 
 - Нет
-
-TODO
-
-- [X] List all users
-- [X] Create new user
-- [X] Delete user
-- [ ] Delete non existent user
-- [X] Add segments to user
-- [X] Add non existent segments to user
-- [X] Delete segments from user
-- [X] Delete non existent segments from user
-- [X] Delete not listed segments from user
-- [X] List all user segments
-
----
-
-- [X] List all segments
-- [X] Create new segment
-- [X] Fetch segment
-- [X] Fetch non existent segment
-- [X] Create duplicate segment
-- [X] Delete segment
-- [X] Delete non existent segment
