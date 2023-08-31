@@ -15,8 +15,10 @@ const (
 	queryInsertSegment       = `INSERT INTO segments(name) VALUES ($1) RETURNING segmentId`
 	queryFetchAllSegments    = `SELECT * FROM segments`
 	queryDeleteSegment       = `DELETE FROM segments WHERE name = $1 RETURNING *`
+	queryDeleteUser          = `DELETE FROM users WHERE userId = $1 RETURNING *`
 	queryDeleteSegmentUser   = `DELETE FROM segments_users su WHERE (su.userId = $1 and su.segmentId = $2)`
 	queryInsertSegmentUser   = `INSERT INTO segments_users (userId, segmentId) VALUES ($1,$2)`
+	queryFetchAllUsers       = `SELECT * FROM users`
 )
 
 const (

@@ -185,3 +185,44 @@ func (r *Database) deleteSegmentUser(ctx context.Context, segmentId, userId int)
 
 	return nil
 }
+
+func (r *Database) ListUsers(ctx context.Context) (*[]models.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	var allUsers []models.User
+
+	rows, err := r.db.QueryContext(ctx, queryFetchAllUsers)
+	if err != nil {
+		return nil, fmt.Errorf("while fetching all users: %w", err)
+	}
+
+	defer rows.Close()
+
+	var tempUser models.User
+
+	for rows.Next() {
+		err := rows.Scan(&tempUser.ID, &tempUser.Username)
+		if err != nil {
+			return &allUsers, fmt.Errorf("while scanning user: %w", err)
+		}
+
+		allUsers = append(allUsers, tempUser)
+	}
+
+	return &allUsers, rows.Err()
+}
+
+func (r *Database) DeleteUser(ctx context.Context, userId int) (*models.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	var user models.User
+
+	if err := r.db.QueryRowContext(ctx, queryDeleteUser, userId).Scan(&user.ID, &user.Username); err != nil {
+		return &user, fmt.Errorf("while deleting user: %w", err)
+	}
+
+	return &user, nil
+
+}

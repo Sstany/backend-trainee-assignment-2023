@@ -77,6 +77,24 @@ func (r *Users) create(ctx *gin.Context) {
 }
 
 func (r *Users) delete(ctx *gin.Context) {
+	var user models.User
+
+	err := ctx.ShouldBindUri(&user)
+	if err != nil {
+		r.logger.Error("", zap.Error(err))
+
+		return
+	}
+
+	deletedUser, err := r.db.DeleteUser(ctx, user.ID)
+	if err != nil {
+		r.logger.Error("", zap.Error(err))
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, deletedUser)
 
 }
 
@@ -163,4 +181,16 @@ func (r *Users) listSegments(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, allSegments)
+}
+
+func (r *Users) list(ctx *gin.Context) {
+	allUsers, err := r.db.ListUsers(ctx)
+	if err != nil {
+		r.logger.Error("", zap.Error(err))
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, allUsers)
 }
