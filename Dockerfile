@@ -12,7 +12,7 @@ RUN go mod download
 
 COPY ./ ./
 
-RUN go build -o avito /app/cmd/main.go
+RUN go build -o segmenty /app/cmd/main.go
 
 FROM alpine
 
