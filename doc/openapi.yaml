@@ -1,0 +1,261 @@
+openapi: 3.1.0
+info:
+  description: Avito Internship Challenge
+  version: "1.0.0"
+  title: Segmenty
+servers:
+  - url: "http://localhost:8090/api/v1"
+tags:
+  - name: Segments
+    description: ""
+  - name: Users
+    description: ""
+paths:
+  /segments:
+    get:
+      tags:
+        - Segments
+      summary: List all Segments
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Segment"
+  "/segments/{slug}":
+    post:
+      tags:
+        - Segments
+      summary: Create Segment
+      parameters: 
+        - name: "slug"
+          in: path
+          description: slug of segment
+          required: true
+          schema: 
+            type: string
+            format: string
+      responses:
+        "201":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                  $ref: "#/components/schemas/Segment"
+    get:
+      tags:
+        - Segments
+      summary: Fetch Segment
+      parameters: 
+        - name: "slug"
+          in: path
+          description: slug of segment
+          required: true
+          schema: 
+            type: string
+            format: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                  $ref: "#/components/schemas/Segment"
+    delete:
+      tags:
+        - Segments
+      summary: Delete Segment
+      parameters: 
+        - name: "slug"
+          in: path
+          description: slug of segment
+          required: true
+          schema: 
+            type: string
+            format: string
+      responses:
+        "200":
+          description: successful operation
+  /users:
+    get:
+      tags:
+        - Users
+      summary: List All Users
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      tags:
+        - Users
+      summary: Create User
+      description: ""
+      requestBody:
+        description: Update an existent pet in the store
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreation"
+        required: true
+      responses:
+        "200":
+          description: successful operation
+  "/users/{id}":
+    get:
+      tags:
+        - Users
+      summary: Fetch User
+      description: ""
+      responses:
+        "200":
+          description: successful operation
+    delete:
+      tags:
+        - Users
+      summary: Delete User
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                  $ref: "#/components/schemas/User"
+  "/users/{id}/history":
+    get:
+      tags:
+        - Users
+      summary: List user segments history
+      parameters: 
+        - name: "id"
+          in: path
+          description: ID of user
+          required: true
+          schema: 
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/History"
+  "/users/{id}/segments":
+    post:
+      tags:
+        - Users
+      summary: Update user segments
+      parameters: 
+        - name: "id"
+          in: path
+          description: ID of user
+          required: true
+          schema: 
+            type: integer
+            format: int64
+      requestBody:
+        description: Update an existent pet in the store
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Update"
+        required: true
+      responses:
+        "200":
+          description: successful operation
+    get:
+      tags:
+        - Users
+      summary: List user segments
+      parameters: 
+        - name: "id"
+          in: path
+          description: ID of user
+          required: true
+          schema: 
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Segment"
+components:
+  schemas:
+    UserCreation:
+      type: object
+      properties:
+        username:
+          type: string
+          description: User name
+          examples: ["Test", "Admin"]
+    User:
+      type: object
+      properties:
+        userId:
+          type: integer
+          description: User ID
+          examples: [1, 2]
+        username:
+          type: string
+          description: User name
+          examples: ["Test", "Admin"]
+    Segment:
+      type: object
+      properties:
+        segmentId:
+          type: integer
+          description: Segment ID
+          examples: [1, 2]
+        Name:
+          type: string
+          description: Segment name
+          examples: ["avito_100_off", "avito_voice_messages"]
+    History:
+      type: object
+      properties:
+        historyId:
+          type: integer
+          description: History ID
+          examples: [2, 3]
+        userId:
+          type: integer
+          description: User ID
+          examples: [1, 2]
+        modificationTime:
+          type: string
+          description: modification time
+          examples: []
+        Type:
+          type: string
+          description: Operation type
+          examples: ["add", "delete"]
+        Segment:
+          type: string
+          description: Segment name
+          examples: ["avito_100_off", "avito_voice_messages"]
+    Update:
+      type: object
+      properties:
+        add:
+          type: array
+          description: Segment names to add
+          examples: ["avito_100_off", "avito_voice_messages"]
+        delete:
+          type: array
+          description: Segment names to delete
+          examples: ["avito_100_off", "avito_voice_messages"]
