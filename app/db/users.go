@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"segmenty/app/db/models"
+
+	"go.uber.org/zap"
 )
 
 func (r *Database) FetchUser(ctx context.Context, userID int) (*models.User, bool, error) {
@@ -13,7 +15,7 @@ func (r *Database) FetchUser(ctx context.Context, userID int) (*models.User, boo
 
 	var user models.User
 
-	err := r.db.QueryRowContext(ctx, queryFetchUser, userID).Scan(&user.Username)
+	err := r.db.QueryRowContext(ctx, queryFetchUser, userID).Scan(&user.ID, &user.Username)
 	if err != nil {
 		return nil, err == sql.ErrNoRows, fmt.Errorf("while query user: %w", err)
 	}
@@ -32,4 +34,127 @@ func (r *Database) InsertUser(ctx context.Context, user *models.User) (int, erro
 
 	return lastInsertId, nil
 
+}
+
+func (r *Database) UpdateUserSegments(
+	ctx context.Context,
+	user *models.User,
+	update *models.Update,
+) *models.Response {
+	ctx, cancel := context.WithTimeout(ctx, extendedTimeout)
+	defer cancel()
+
+	var response models.Response
+
+	if len(update.Add) > 0 {
+		response.Added = r.addUserSegments(ctx, user.ID, update.Add)
+	}
+
+	if len(update.Delete) > 0 {
+		response.Deleted = r.deleteUserSegments(ctx, user.ID, update.Delete)
+	}
+
+	return &response
+}
+
+func (r *Database) addUserSegments(
+	ctx context.Context,
+	userId int,
+	addUpdate []string,
+) *models.UpdateStats {
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	var updateStats models.UpdateStats
+
+	for _, segmentName := range addUpdate {
+		segment, isNotExists, err := r.FetchSegment(ctx, segmentName)
+		if err != nil || isNotExists {
+			r.logger.Error("", zap.Error(err))
+			updateStats.Skipped = append(updateStats.Skipped, segmentName)
+
+			continue
+		}
+
+		if err := r.insertSegmentUser(ctx, segment.ID, userId); err != nil {
+			r.logger.Error("", zap.Error(err))
+			updateStats.Failed = append(updateStats.Failed, segmentName)
+
+			continue
+		}
+
+		updateStats.Processed = append(updateStats.Processed, segmentName)
+	}
+
+	return &updateStats
+}
+
+func (r *Database) insertSegmentUser(ctx context.Context, segmentId, userId int) error {
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	if _, err := r.db.ExecContext(ctx, queryInsertSegmentUser, userId, segmentId); err != nil {
+		return fmt.Errorf("while inserting segment into user: %w", err)
+	}
+
+	return nil
+}
+
+func (r *Database) deleteUserSegments(
+	ctx context.Context,
+	userId int,
+	deleteUpdate []string,
+) *models.UpdateStats {
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	var updateStats models.UpdateStats
+
+	for _, segmentName := range deleteUpdate {
+		segment, isNotExists, err := r.FetchSegment(ctx, segmentName)
+		if err != nil || isNotExists {
+			r.logger.Error("", zap.Error(err))
+			updateStats.Skipped = append(updateStats.Skipped, segmentName)
+
+			continue
+		}
+
+		if err := r.deleteSegmentUser(ctx, segment.ID, userId); err != nil {
+			r.logger.Error("", zap.Error(err))
+			if err == errNothingChanged {
+				updateStats.Skipped = append(updateStats.Skipped, segmentName)
+
+				continue
+			}
+
+			updateStats.Failed = append(updateStats.Failed, segmentName)
+
+			continue
+		}
+
+		updateStats.Processed = append(updateStats.Processed, segmentName)
+	}
+
+	return &updateStats
+}
+
+func (r *Database) deleteSegmentUser(ctx context.Context, segmentId, userId int) error {
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	res, err := r.db.ExecContext(ctx, queryDeleteSegmentUser, userId, segmentId)
+	if err != nil {
+		return fmt.Errorf("while deleting segment from user: %w", err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("while deleting segment from user: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return errNothingChanged
+	}
+
+	return nil
 }

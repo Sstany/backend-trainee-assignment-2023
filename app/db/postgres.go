@@ -60,6 +60,12 @@ func (r *Database) Init(ctx context.Context) bool {
 		return false
 	}
 
-	return true
+	_, err = r.db.ExecContext(ctx, queryCreateSegmentsUsersTable)
+	if err != nil && !sdk.IsDublicateTableErr(err) {
+		r.logger.Error("", zap.Error(fmt.Errorf("while creating segments_users table: %w", err)))
 
+		return false
+	}
+
+	return true
 }

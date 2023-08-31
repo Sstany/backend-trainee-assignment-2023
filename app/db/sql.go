@@ -1,6 +1,9 @@
 package db
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 const (
 	queryFetchUser    = `SELECT * FROM users WHERE userId = $1`
@@ -12,9 +15,22 @@ const (
 	queryInsertSegment       = `INSERT INTO segments(name) VALUES ($1) RETURNING segmentId`
 	queryFetchAllSegments    = `SELECT * FROM segments`
 	queryDeleteSegment       = `DELETE FROM segments WHERE name = $1 RETURNING *`
+	queryDeleteSegmentUser   = `DELETE FROM segments_users su WHERE (su.userId = $1 and su.segmentId = $2)`
+	queryInsertSegmentUser   = `INSERT INTO segments_users (userId, segmentId) VALUES ($1,$2)`
+)
+
+const (
+	queryCreateSegmentsUsersTable = `CREATE TABLE segments_users (
+		segmentId   int REFERENCES segments (segmentId) ON UPDATE CASCADE ON DELETE CASCADE,
+		userId int REFERENCES users (userId) ON UPDATE CASCADE,
+		CONSTRAINT segment_user_pkey PRIMARY KEY (segmentId, userId))`
 )
 
 const (
 	defaultTimeout  = 5 * time.Second
 	extendedTimeout = 30 * time.Second
+)
+
+var (
+	errNothingChanged = errors.New("Nothing changed")
 )
