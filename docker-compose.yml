@@ -17,7 +17,7 @@ services:
     ports:
         - "8090:8090"
     environment:
-        - POSTGRES_URI=postgresql://username:password@postgres:5432/avito
+        - POSTGRES_URI=postgresql://username:password@postgres:5432/avito?sslmode=disable
   swagger-ui:
    image: swaggerapi/swagger-ui
    container_name: swagger_ui_container
