@@ -9,6 +9,31 @@ import (
 )
 
 func (r *Segments) fetch(ctx *gin.Context) {
+	var segment *models.Segment
+
+	err := ctx.ShouldBindUri(&segment)
+	if err != nil {
+		r.logger.Error("", zap.Error(err))
+		ctx.AbortWithError(http.StatusBadRequest, err)
+
+		return
+	}
+
+	newSegment, isNoRows, err := r.db.FetchSegment(ctx, segment.Name)
+	if err != nil {
+		r.logger.Error("", zap.Error(err))
+
+		if isNoRows {
+			ctx.String(http.StatusNotFound, "Segment with name '%s' is not found", segment.Name)
+
+			return
+		}
+
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+
+		return
+	}
+	ctx.JSON(http.StatusOK, newSegment)
 
 }
 

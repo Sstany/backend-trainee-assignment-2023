@@ -2,10 +2,25 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"segmenty/app/db/models"
 	"segmenty/app/sdk"
 )
+
+func (r *Database) FetchSegment(ctx context.Context, segmentName string) (*models.Segment, bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	var segment models.Segment
+
+	err := r.db.QueryRowContext(ctx, queryFetchSegment, segmentName).Scan(&segment.ID, &segment.Name)
+	if err != nil {
+		return nil, err == sql.ErrNoRows, fmt.Errorf("while quering segment: %w", err)
+	}
+
+	return &segment, err == sql.ErrNoRows, nil
+}
 
 func (r *Database) InsertSegment(ctx context.Context, segment *models.Segment) (int, bool, error) {
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
