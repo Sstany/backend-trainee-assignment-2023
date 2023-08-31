@@ -19,6 +19,20 @@ func (r *Database) InsertSegment(ctx context.Context, segment *models.Segment) (
 	return lastInsertId, false, nil
 
 }
+
+func (r *Database) DeleteSegment(ctx context.Context, segmentName string) (*models.Segment, error) {
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	var segment models.Segment
+
+	if err := r.db.QueryRowContext(ctx, queryDeleteSegment, segmentName).Scan(&segment.ID, &segment.Name); err != nil {
+		return &segment, fmt.Errorf("while deleting segment: %w", err)
+	}
+
+	return &segment, nil
+}
+
 func (r *Database) ListSegments(ctx context.Context) (*[]models.Segment, error) {
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()

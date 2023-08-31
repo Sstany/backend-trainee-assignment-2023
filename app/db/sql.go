@@ -9,6 +9,7 @@ const (
 	queryCreateSegmentsTable = `CREATE TABLE segments (segmentId serial PRIMARY KEY,name text NOT NULL UNIQUE)`
 	queryInsertSegment       = `INSERT INTO segments(name) VALUES ($1) RETURNING segmentId`
 	queryFetchAllSegments    = `SELECT * FROM segments`
+	queryDeleteSegment       = `DELETE FROM segments WHERE name = $1 RETURNING *`
 )
 
 const (

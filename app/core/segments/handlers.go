@@ -44,7 +44,24 @@ func (r *Segments) create(ctx *gin.Context) {
 }
 
 func (r *Segments) delete(ctx *gin.Context) {
+	var segment *models.Segment
 
+	err := ctx.ShouldBindUri(&segment)
+	if err != nil {
+		r.logger.Error("", zap.Error(err))
+
+		return
+	}
+
+	newSegment, err := r.db.DeleteSegment(ctx, segment.Name)
+	if err != nil {
+		r.logger.Error("", zap.Error(err))
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, newSegment)
 }
 
 func (r *Segments) list(ctx *gin.Context) {
