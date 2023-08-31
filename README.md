@@ -28,9 +28,11 @@ docker compose down --volumes
 
 # REST API
 
-Описание REST API в openapi.yaml
+Описание REST API в doc/openapi.yaml
 
-## Get specific user
+На порту 3000 стартует swagger-ui, в котором описаны все запросы
+
+В файле doc/insomnia_collection.json содержится коллекция запросов, которую можно импортировать в Insomnia.
 
 ### Request
 
